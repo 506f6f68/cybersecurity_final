@@ -10,7 +10,8 @@ db = SQLAlchemy()
 
 
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(40), primary_key=True)
+    public_key = db.Column(db.String(400))
     personal_id = db.Column(db.String(40), unique=True)
     first_name = db.Column(db.String(40))
     last_name = db.Column(db.String(40))
@@ -20,6 +21,8 @@ class User(db.Model):
             "personal_id": self.personal_id,
             "first_name": self.first_name,
             "last_name": self.last_name,
+            "id": self.id,
+            "public_key": self.public_key
         })
 
     def get_profile(self):
@@ -27,13 +30,15 @@ class User(db.Model):
             "personal_id": self.personal_id,
             "first_name": self.first_name,
             "last_name": self.last_name,
+            "id": self.id,
+            "public_key": self.public_key
         }
 
     def get_user_id(self):
         return self.id
 
-    def check_password(self, password):
-        return password == 'valid'
+    # def check_password(self, password):
+    #     return password == 'valid'
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}

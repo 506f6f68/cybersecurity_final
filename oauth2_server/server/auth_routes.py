@@ -3,6 +3,9 @@ from flask import Flask, request, jsonify, Blueprint
 from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, \
                                unset_jwt_cookies, jwt_required, JWTManager
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import hashes
+from cryptography.exceptions import InvalidSignature
 from .models import db, User
 
 auth = Blueprint('auth', __name__)
@@ -30,6 +33,12 @@ def register():
     personal_id = data['personal_id']
     first_name = data['first_name']
     last_name = data['last_name']
+    public_key = data['public_key']
+    cred_id = data['cred_id']
+    print("="*50)
+    print(public_key)
+    print(data)
+
 
     # Get the user
     user = User.query.filter_by(personal_id=personal_id).first()
@@ -39,7 +48,14 @@ def register():
         return {"message": "Invalid personal_id"}, 400
     
     # Create a new user
-    user = User(personal_id=personal_id, first_name=first_name, last_name=last_name)
+    user = User(
+        id=cred_id, 
+        public_key=public_key,
+        personal_id=personal_id, 
+        first_name=first_name, 
+        last_name=last_name
+    )
+    print(user)
     db.session.add(user)
     db.session.commit()
 
@@ -50,19 +66,74 @@ def register():
     return response, 200, {'ContentType':'application/json'} 
 
 
+
+def uint8array_from_dict(str_dict):
+    byte_array = bytearray(len(str_dict))
+    for key, value in str_dict.items():
+        byte_array[int(key)] = int(value)
+    return bytes(byte_array)
+
 @auth.route('/login', methods=["POST"])
 def login():
     personal_id = request.json['personal_id']
+    client_data = request.json['client_data']
+    auth_data = request.json['auth_data']
+    signature = request.json['signature']
+
     user = User.query.filter_by(personal_id=personal_id).first()
+    
+    public_key = user.as_dict()["public_key"]
+   
+
     # Check if the user exists
     if not user:
         # User does not exist
         return {"message":"User not exist"}, 404
     # Authenticate the user
-    # TODO
+    public_key = json.loads(public_key)
+    x = uint8array_from_dict(public_key["-2"])
+    y = uint8array_from_dict(public_key["-3"])
 
-    access_token = create_access_token(identity=personal_id)
-    response = {"access_token":access_token}
+    public_key = b'\x04' + x + y
+
+    curve = ec.SECP256R1()
+    client_data = uint8array_from_dict(client_data)
+    auth_data = uint8array_from_dict(auth_data)
+    signature = uint8array_from_dict(signature)
+
+    digest = hashes.Hash(hashes.SHA256())
+    digest.update(client_data)
+    digested = digest.finalize()
+
+    public_key = ec.EllipticCurvePublicKey.from_encoded_point(
+        curve, public_key)
+    
+    try:
+        public_key.verify(signature, auth_data + digested,
+                          ec.ECDSA(hashes.SHA256()))
+        print("Signature is valid.")
+        access_token = create_access_token(identity=personal_id)
+        response = {"access_token": access_token}
+        return response, 200
+    except InvalidSignature:
+        print("Signature is invalid.")
+        response = {"message": "Invalid signature"}
+        return response, 200
+
+
+
+@auth.route('/id/<personal_id>', methods=["GET"])
+def get_cred_id(personal_id):
+    user = User.query.filter_by(personal_id=personal_id).first()
+    # Check if the user exists
+    if not user:
+        # User does not exist
+        return {"message":"User not exist"}, 404
+    
+    user_data = user.as_dict()
+    cred_id = user_data["id"]
+
+    response = {"cred_id": cred_id}
     return response
 
 @auth.route("/logout", methods=["POST"])

@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sendRequest } from "@utils/sendRequest";
+import { Registration } from "@utils/webAuthn";
 
 const emptyUser = {
   personal_id: "",
@@ -17,10 +18,15 @@ const page = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const { credId, publicKey } = await Registration(newUser.personal_id);
+
     setSubmitting(true);
-
-    const response = await sendRequest("/api/auth/register", "POST", newUser);
-
+    const response = await sendRequest("/api/auth/register", "POST", {
+      ...newUser,
+      cred_id: credId,
+      public_key: publicKey,
+    });
     setSubmitting(false);
 
     if (response?.ok) {
