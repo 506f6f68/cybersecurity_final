@@ -5,7 +5,7 @@ export const sendRequest = async (url, method, body = null) => {
     method: method,
     headers: {
       "Content-Type": "application/json",
-      Accept: "application/json",
+      Accept: "*/*",
     },
   };
   if (token) {

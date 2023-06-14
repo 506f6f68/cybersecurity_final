@@ -52,9 +52,12 @@ const ClientAppCard = ({ client }) => {
         >
           {secretCopied ? "Copied!" : "Secret"}
         </button>
-        <button className="font-light w-full hover:bg-gray-100 rounded-lg">
-          Details
-        </button>
+        <Link
+          href={`/clients/${client.client_id}`}
+          className="text-center font-light w-full hover:bg-gray-100 rounded-lg"
+        >
+          Edit
+        </Link>
         <button className="font-light w-full hover:bg-gray-100 rounded-lg text-red-600">
           Delete
         </button>

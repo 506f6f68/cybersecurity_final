@@ -22,6 +22,7 @@ const Profile = () => {
       setUser(userData);
       return;
     }
+    localStorage.removeItem("token");
     alert("Invalid token");
     router.push("/");
   };

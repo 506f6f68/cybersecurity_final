@@ -67,6 +67,61 @@ def get_clients():
 
     return clients, 200
 
+@oauth2.route('/clients/<client_id>', methods=['GET'])
+@jwt_required()
+def get_client(client_id):
+    personal_id = get_jwt_identity()
+    user = User.query.filter_by(personal_id=personal_id).first()
+
+    if not user:
+        return {"message": "Invalid JWT token"}, 400
+    
+    client = OAuth2Client.query.filter_by(user_id=user.id).filter_by(client_id=client_id).first()
+    if not client:
+        return {"message": "Client not found"}, 404
+    
+    return client.as_dict(), 200
+
+@oauth2.route('/clients/<client_id>/name', methods=['GET'])
+def get_client_name(client_id):
+
+    client = OAuth2Client.query.filter_by(client_id=client_id).first()
+    if not client:
+        return {"message": "Client not found"}, 404
+
+    return {"client_name": client.as_dict()["client_metadata"]["client_name"]}, 200
+
+@oauth2.route('/clients/<client_id>', methods=["PATCH"])
+@jwt_required()
+def update_client(client_id):
+    personal_id = get_jwt_identity()
+    user = User.query.filter_by(personal_id=personal_id).first()
+
+    if not user:
+        return {"message": "Invalid JWT token"}, 400
+    
+    client = OAuth2Client.query.filter_by(user_id=user.id).filter_by(client_id=client_id).first()
+    if not client:
+        return {"message": "Client not found"}, 404
+    
+    # Get request data
+    data = request.json
+    client_metadata = {
+        "client_name": data["client_name"],
+        "client_uri": data["client_uri"],
+        "grant_types": split_by_crlf(data["grant_type"]),
+        "redirect_uris": split_by_crlf(data["redirect_uri"]),
+        "response_types": split_by_crlf(data["response_type"]),
+        "scope": data["scope"],
+        "token_endpoint_auth_method": data["token_endpoint_auth_method"]
+    }
+    client.set_client_metadata(client_metadata)
+
+    db.session.commit()
+    return {"message":"Successfully updated a client!"}, 200
+
+
+
 @oauth2.route('/logout')
 def logout():
     del session['id']
@@ -122,25 +177,29 @@ def create_client():
 def authorize():
     personal_id = get_jwt_identity()
     user = User.query.filter_by(personal_id=personal_id).first()
-
+   
     # user = current_user()
     # if user log status is not true (Auth server), then to log it in
-    if not user:
-        return redirect(url_for('oauth2.home', next=request.url))
-    if request.method == 'GET':
-        try:
-            grant = authorization.get_consent_grant(end_user=user)
-        except OAuth2Error as error:
-            return error.error
-        return render_template('authorize.html', user=user, grant=grant)
-    if not user and 'personal_id' in request.form:
-        personal_id = request.form.get('personal_id')
-        user = User.query.filter_by(personal_id=personal_id).first()
-    if request.form['confirm']:
+    # if not user:
+    #     return redirect(url_for('oauth2.home', next=request.url))
+    # if request.method == 'GET':
+    #     try:
+    #         grant = authorization.get_consent_grant(end_user=user)
+    #     except OAuth2Error as error:
+    #         return error.error
+    #     return render_template('authorize.html', user=user, grant=grant)
+    # if not user and 'personal_id' in request.form:
+    #     personal_id = request.form.get('personal_id')
+    #     user = User.query.filter_by(personal_id=personal_id).first()
+
+    if request.json['confirm']:
         grant_user = user
     else:
         grant_user = None
-    return authorization.create_authorization_response(grant_user=grant_user)
+
+    res = authorization.create_authorization_response(grant_user=grant_user)
+    redirect_url = res.headers.get("Location")
+    return {"redirect_url": redirect_url}, 200
 
 
 @oauth2.route('/oauth/token', methods=['POST'])

@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { sendRequest } from "@utils/sendRequest";
 
 const emptyUser = {
@@ -12,13 +12,7 @@ const page = () => {
   const [newUser, setNewUser] = useState(emptyUser);
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      router.push("/profile");
-    }
-  }, []);
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,7 +23,9 @@ const page = () => {
     if (response?.ok) {
       const { access_token } = await response.json();
       localStorage.setItem("token", access_token);
-      router.push("/profile");
+      router.push(
+        `/oauth/authorize?client_id=${searchParams.get("client_id")}`
+      );
       return;
     }
 
