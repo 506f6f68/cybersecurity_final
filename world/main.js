@@ -28,10 +28,13 @@ function init() {
 
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
     camera.position.y = 10;
+    const helper = new THREE.CameraHelper( camera );
+   
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color( 0xffffff );
     scene.fog = new THREE.Fog( 0xffffff, 0, 750 );
+    scene.add( helper );
 
     const light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.75 );
     light.position.set( 0.5, 1, 0.75 );
@@ -191,6 +194,19 @@ function init() {
 
         // Add the model to the cameraman object
         scene.add(model);
+        const buildings = model.children.filter(child => child.name.includes("Build"));
+        console.log(buildings)
+        const buildingBoxes = buildings.map(building => {
+            const box = new THREE.Box3().setFromObject(building);
+            box.expandByScalar(100);
+            console.log(box)
+            const helper = new THREE.Box3Helper( box, 0xffff00 );
+            scene.add( helper );
+            return box;
+        });
+
+        objects.push(...buildingBoxes);
+
     },
     (xhr) => {
         // Progress callback (optional)
@@ -236,6 +252,7 @@ function animate() {
         raycaster.ray.origin.y -= 10;
 
         const intersections = raycaster.intersectObjects( objects, false );
+        console.log(intersections.length)
 
         const onObject = intersections.length > 0;
 
@@ -257,6 +274,7 @@ function animate() {
 
             velocity.y = Math.max( 0, velocity.y );
             canJump = true;
+            console.log("hit")
 
         }
 
