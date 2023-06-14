@@ -43,14 +43,20 @@ const Nav = () => {
         </Link>
       </div>
       {user ? (
-        <button
-          onClick={() => {
-            localStorage.removeItem("fidoauth_token");
-            setUser(null);
-          }}
-        >
-          Hello, {user.personal_id}
-        </button>
+        <div className="flex gap-4 ">
+          <div className="flex justify-center items-center">
+            <span className=""> Hello, {user.personal_id}</span>
+          </div>
+          <button
+            className="text-md font-semibold border border-gray-800 px-2 p-1 rounded-md text-gray-200 hover:bg-gray-600"
+            onClick={() => {
+              localStorage.removeItem("fidoauth_token");
+              setUser(null);
+            }}
+          >
+            Sign Out
+          </button>
+        </div>
       ) : (
         <button
           onClick={() => {
