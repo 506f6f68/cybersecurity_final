@@ -58,9 +58,9 @@ const ClientAppCard = ({ client }) => {
         >
           Edit
         </Link>
-        <button className="font-light w-full hover:bg-gray-100 rounded-lg text-red-600">
+        {/* <button className="font-light w-full hover:bg-gray-100 rounded-lg text-red-600">
           Delete
-        </button>
+        </button> */}
         {/* <span className="font-light">Client ID: {client.client_id}</span> */}
         {/* <div className="copy_btn" onClick={handleCopy}>
           <Image
