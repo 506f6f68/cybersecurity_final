@@ -3,36 +3,13 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getProfile } from "@/utils/getProfile";
 
 const Nav = () => {
   const [user, setUser] = useState(null);
   const pathname = usePathname();
   useEffect(() => {
-    const getProfile = async () => {
-      const token = localStorage.getItem("fidoauth_token");
-      if (token) {
-        try {
-          const res = await fetch("http://127.0.0.1:3000/api/me", {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          if (res?.ok) {
-            const data = await res.json();
-            setUser(data);
-            return;
-          }
-          localStorage.removeItem("fidoauth_token");
-          setUser(null);
-        } catch (error) {
-          console.log("error");
-          localStorage.removeItem("fidoauth_token");
-          setUser(null);
-        }
-      }
-    };
-    getProfile();
+    getProfile(setUser);
   }, [pathname]);
   return (
     <nav className="p-5 z-10 w-full  items-center justify-between font-mono text-sm lg:flex">
@@ -53,9 +30,12 @@ const Nav = () => {
       </div>
       {user ? (
         <div className="flex gap-4 ">
-          <div className="flex justify-center items-center">
+          <Link
+            href="/profile"
+            className="flex justify-center items-center hover:bg-gray-800 px-2 p-1 rounded-md "
+          >
             <span className=""> Hello, {user.personal_id}</span>
-          </div>
+          </Link>
           <button
             className="text-md font-semibold border border-gray-800 px-2 p-1 rounded-md text-gray-200 hover:bg-gray-600"
             onClick={() => {

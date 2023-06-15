@@ -30,8 +30,10 @@ const Auth = () => {
         const { access_token } = await response.json();
         setAccessToken(access_token);
         localStorage.setItem("fidoauth_token", access_token);
-        router.push("/");
-        return;
+        setTimeout(() => {
+          router.push("/");
+          return;
+        }, 2000);
       }
     } catch (error) {
       alert("Code invalid, please sign in again.");
@@ -45,7 +47,7 @@ const Auth = () => {
 
   return (
     <div>
-      <p>{accessToken}</p>
+      <p>Redirecting...</p>
     </div>
   );
 };

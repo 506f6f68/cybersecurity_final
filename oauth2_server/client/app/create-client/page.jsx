@@ -98,9 +98,7 @@ const CreateClient = () => {
             <p className="font-satoshi text-xl font-bold  text-gray-800">
               <span>Token Endpoint Auth Method</span> <span>*</span>
             </p>
-            <p className=" text-sm text-gray-600">
-              The URI you want to go back to after authentication.
-            </p>
+
             <select
               value={newClient.token_endpoint_auth_method}
               onChange={(e) =>

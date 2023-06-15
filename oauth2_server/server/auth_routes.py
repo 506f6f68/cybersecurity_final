@@ -83,7 +83,6 @@ def login():
     user = User.query.filter_by(personal_id=personal_id).first()
     
     public_key = user.as_dict()["public_key"]
-   
 
     # Check if the user exists
     if not user:
